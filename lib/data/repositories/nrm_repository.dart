@@ -78,7 +78,7 @@ class NrmRepository {
 
       final Map<String, dynamic> responseBody = jsonDecode(response.body);
       
-      if (response.statusCode == 200 && responseBody['success'] == true) {
+      if ((response.statusCode == 200 || response.statusCode == 201) && responseBody['success'] == true) {
         return NrmSingleRequestResponse.fromJson(responseBody);
       } else {
         String errorDesc = responseBody['message'] ?? 'Failed to submit NRM request.';
@@ -159,15 +159,20 @@ class NrmRepository {
       print('Response Status Code: ${response.statusCode}');
       print('Response Body: ${response.body}');
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
-        return responseBody['success'] == true;
+        if (responseBody['success'] == true) {
+          return true;
+        } else {
+          throw Exception(responseBody['message'] ?? 'Action failed.');
+        }
+      } else {
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        throw Exception(responseBody['message'] ?? 'Server Error: ${response.statusCode}');
       }
-      return false;
     } catch (e) {
-      print('HTTP error, simulating success for testing: $e');
-      await Future.delayed(const Duration(seconds: 1));
-      return true;
+      print('HTTP error: $e');
+      throw Exception(e.toString());
     }
   }
 }

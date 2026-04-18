@@ -108,9 +108,11 @@ class _HrCloseTicketScreenState extends State<HrCloseTicketScreen> {
       return;
     }
 
+    final sanitizedAmount = amountText.replaceAll(',', '');
+
     final hrViewModel = Provider.of<HrViewModel>(context, listen: false);
     final success = await hrViewModel.closeTicket(
-        widget.requestId, amountText, _billPhoto);
+        widget.requestId, sanitizedAmount, _billPhoto);
 
     if (success) {
       if (mounted) {

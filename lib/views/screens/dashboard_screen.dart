@@ -66,7 +66,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _buildHomeTab(),
           const HrScreen(),
           const NrmScreen(),
-          const MaintenanceScreen(),
+          // const MaintenanceScreen(),
           const ProfileScreen(),
         ],
       ),
@@ -91,10 +91,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icon(Icons.inventory_2_outlined), // Approximating NRM box icon
             label: 'NRM',
           ),
-          BottomNavigationBarItem(
+          /* BottomNavigationBarItem(
             icon: Icon(Icons.build_outlined),
             label: 'Maint.',
-          ),
+          ), */
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             label: 'Profile',
@@ -111,10 +111,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Container(
           color: AppColors.primaryColor,
           padding: const EdgeInsets.only(top: 50, bottom: 20, left: 16, right: 16),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.settings_outlined, color: Colors.white),
-              SizedBox(width: 8),
+              Image.asset(
+                'assets/images/logo.png',
+                height: 32,
+              ),
+              const SizedBox(width: 8),
               Text(
                 'Amphenol Plant',
                 style: TextStyle(
@@ -179,13 +182,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       }
 
                       return InkWell(
-                        onTap: () {
+                        onTap: () async {
+                           final storage = SecureStorageService();
+                           final rawData = await storage.getUserData();
+                           bool canApprove = false;
+                           bool canExecute = false;
+                           if (rawData != null) {
+                               try {
+                                   final map = jsonDecode(rawData);
+                                   final permsMap = map['permissions'] ?? {};
+                                   canApprove = permsMap['hr_approve'] == true;
+                                   canExecute = permsMap['hr_execute'] == true;
+                               } catch (e) {
+                                   debugPrint('Error: $e');
+                               }
+                           }
+
                            if (req.status.toUpperCase() == 'PENDING') {
-                              context.push('/hr/approve/${req.id}', extra: req);
+                               if (canApprove) {
+                                   if (context.mounted) context.push('/hr/approve/${req.id}', extra: req);
+                               } else {
+                                   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('You do not have permission to approve this request.'), backgroundColor: Colors.orange));
+                               }
                            } else if (req.status.toUpperCase() == 'APPROVED') {
-                              context.push('/hr/close/${req.id}', extra: req);
+                               if (canExecute) {
+                                   if (context.mounted) context.push('/hr/close/${req.id}', extra: req);
+                               } else {
+                                   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('You do not have permission to close this request.'), backgroundColor: Colors.orange));
+                               }
                            } else {
-                              setState(() => _currentIndex = 1);
+                               if (context.mounted) setState(() => _currentIndex = 1);
                            }
                         },
                         child: _buildTaskCard(
@@ -234,8 +260,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       }
 
                       return InkWell(
-                        onTap: () {
-                           context.push('/nrm/approve/${req.id}', extra: req);
+                        onTap: () async {
+                           final storage = SecureStorageService();
+                           final rawData = await storage.getUserData();
+                           bool canApprove = false;
+                           bool canExecute = false;
+                           if (rawData != null) {
+                               try {
+                                   final map = jsonDecode(rawData);
+                                   final permsMap = map['permissions'] ?? {};
+                                   canApprove = permsMap['nrm_approve'] == true;
+                                   canExecute = permsMap['nrm_execute'] == true;
+                               } catch (e) {
+                                   debugPrint('Error: $e');
+                               }
+                           }
+
+                           if (req.status.toUpperCase() == 'PENDING') {
+                               if (canApprove) {
+                                   if (context.mounted) context.push('/nrm/approve/${req.id}', extra: req);
+                               } else {
+                                   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('You do not have permission to approve this request.'), backgroundColor: Colors.orange));
+                               }
+                           } else if (req.status.toUpperCase() == 'ISSUANCE') {
+                               if (canExecute) {
+                                   if (context.mounted) context.push('/nrm/approve/${req.id}', extra: req);
+                               } else {
+                                   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('You do not have permission to issue this request.'), backgroundColor: Colors.orange));
+                               }
+                           } else {
+                               // Just navigate to view details or do nothing
+                               if (context.mounted) context.push('/nrm/approve/${req.id}', extra: req);
+                           }
                         },
                         child: _buildTaskCard(
                           id: req.ticketNumber,
@@ -253,6 +309,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 24),
                   
+                  // Temporarily hiding Maintenance part
+                  /*
                   _buildSectionHeader('MAINTENANCE', onTapViewAll: () => setState(() => _currentIndex = 3)),
                   Consumer<MaintenanceViewModel>(
                     builder: (context, maintViewModel, _) {
@@ -293,6 +351,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       );
                     },
                   ),
+                  */
                 ],
               ),
             ),

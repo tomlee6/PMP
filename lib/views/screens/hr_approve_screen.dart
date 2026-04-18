@@ -52,7 +52,7 @@ class _HrApproveScreenState extends State<HrApproveScreen> {
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(vm.submitErrorMessage), backgroundColor: AppColors.errorColor),
+        SnackBar(content: Text(vm.submitErrorMessage, style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.errorColor),
       );
     }
   }
@@ -63,13 +63,13 @@ class _HrApproveScreenState extends State<HrApproveScreen> {
     if (success) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Request rejected successfully'), backgroundColor: AppColors.successColor),
+        const SnackBar(content: Text('Request rejected successfully'), backgroundColor: Colors.orange),
       );
       context.pop(true);
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(vm.submitErrorMessage), backgroundColor: AppColors.errorColor),
+        SnackBar(content: Text(vm.submitErrorMessage, style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.errorColor),
       );
     }
   }
@@ -100,6 +100,78 @@ class _HrApproveScreenState extends State<HrApproveScreen> {
           fontWeight: FontWeight.bold,
         ),
       ),
+    );
+  }
+
+  Widget _buildItemsList(String itemsText) {
+    if (!itemsText.contains(':') && !itemsText.contains('-')) {
+      return Text(itemsText, style: const TextStyle(color: AppColors.textPrimaryColor, height: 1.5));
+    }
+
+    List<String> items = [];
+    if (itemsText.contains(';')) {
+      items = itemsText.split(';');
+    } else if (itemsText.contains(',')) {
+      items = itemsText.split(',');
+    } else {
+      items = [itemsText];
+    }
+
+    Map<String, List<String>> categorizedItems = {};
+    
+    for (var item in items) {
+      item = item.trim();
+      if (item.isEmpty) continue;
+      
+      final colonIndex = item.indexOf(':');
+      if (colonIndex != -1) {
+        final category = item.substring(0, colonIndex).trim();
+        final details = item.substring(colonIndex + 1).trim();
+        categorizedItems.putIfAbsent(category, () => []).add(details);
+      } else {
+        categorizedItems.putIfAbsent('Other', () => []).add(item);
+      }
+    }
+
+    if (categorizedItems.isEmpty) {
+      return Text(itemsText, style: const TextStyle(color: AppColors.textPrimaryColor, height: 1.5));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: categorizedItems.entries.map((entry) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                entry.key,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primaryColor),
+              ),
+              const SizedBox(height: 4),
+              ...entry.value.map((itemValue) => Padding(
+                padding: const EdgeInsets.only(bottom: 4.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4.0),
+                      child: Icon(Icons.arrow_right, size: 16, color: AppColors.textSecondaryColor),
+                    ),
+                    Expanded(
+                      child: Text(
+                        itemValue, 
+                        style: const TextStyle(color: AppColors.textPrimaryColor, fontSize: 14)
+                      ),
+                    ),
+                  ],
+                ),
+              )).toList(),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -162,10 +234,7 @@ class _HrApproveScreenState extends State<HrApproveScreen> {
                           if (request.itemsText.isNotEmpty)
                             DetailCardWidget(
                               title: 'Items Required',
-                              child: Text(
-                                request.itemsText,
-                                style: const TextStyle(color: AppColors.textPrimaryColor, height: 1.5),
-                              ),
+                              child: _buildItemsList(request.itemsText),
                             ),
                           
                           // Comments box

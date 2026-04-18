@@ -67,7 +67,10 @@ class AuthRepository {
     final token = await _storageService.getToken();
     
     try {
-      final response = await http.post(
+      print('--- CHANGE PASSWORD API ---');
+      print('URL: $url');
+      
+      final response = await http.put(
         url,
         headers: {
           'Content-Type': 'application/json',
@@ -79,12 +82,18 @@ class AuthRepository {
         }),
       );
 
-      final Map<String, dynamic> responseBody = jsonDecode(response.body);
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
 
-      if (response.statusCode == 200 && responseBody['success'] == true) {
-        return true;
-      } else {
-        throw Exception(responseBody['message'] ?? 'Failed to change password');
+      try {
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        if (response.statusCode == 200 && responseBody['success'] == true) {
+          return true;
+        } else {
+          throw Exception(responseBody['message'] ?? 'Failed to change password');
+        }
+      } catch (e) {
+        throw Exception('API Format Error: ${response.body}');
       }
     } catch (e) {
       throw Exception(e.toString());

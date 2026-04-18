@@ -59,13 +59,13 @@ class _NrmApproveScreenState extends State<NrmApproveScreen> {
     if (success) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Request $actionLabel successfully'), backgroundColor: AppColors.successColor),
+        SnackBar(content: Text('Request $actionLabel successfully', style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.successColor),
       );
       context.pop(true);
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(vm.submitErrorMessage), backgroundColor: AppColors.errorColor),
+        SnackBar(content: Text(vm.submitErrorMessage, style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.errorColor),
       );
     }
   }
@@ -89,13 +89,13 @@ class _NrmApproveScreenState extends State<NrmApproveScreen> {
     if (success) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Request $actionLabel successfully'), backgroundColor: AppColors.successColor),
+        SnackBar(content: Text('Request $actionLabel successfully', style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.successColor),
       );
       context.pop(true);
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(vm.submitErrorMessage), backgroundColor: AppColors.errorColor),
+        SnackBar(content: Text(vm.submitErrorMessage, style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.errorColor),
       );
     }
   }

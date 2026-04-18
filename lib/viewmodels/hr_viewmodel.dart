@@ -87,9 +87,9 @@ class HrViewModel extends ChangeNotifier {
   Future<bool> createHrRequest({
     required String customerName,
     required String visitDate,
-    required int purposeId,
     required String remarks,
     required String itemsText,
+    required int purposeId,
   }) async {
     _isSubmitting = true;
     _submitErrorMessage = '';

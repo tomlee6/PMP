@@ -63,10 +63,6 @@ class _LoginScreenState extends State<LoginScreen> {
               _buildHeader(),
               const SizedBox(height: 24),
               _buildLoginForm(authViewModel),
-              const SizedBox(height: 24),
-              _buildDemoCredentials(),
-              const SizedBox(height: 24),
-              _buildTimeline(),
             ],
           ),
         ),
@@ -77,18 +73,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Container(
+        Image.asset(
+          'assets/images/logo.png',
           width: 70,
           height: 70,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const Icon(
-            Icons.settings,
-            size: 40,
-            color: Colors.black,
-          ),
         ),
         const SizedBox(height: 16),
         const Text(
@@ -224,42 +212,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: Colors.white,
                       ),
                     ),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF155CB4), side: const BorderSide(color: Color(0xFF155CB4)),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Sign In (Web Admin)',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black87, side: BorderSide(color: Colors.grey.shade400),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Sign In (Master Data Settings)',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
             ),
           ],
         ),

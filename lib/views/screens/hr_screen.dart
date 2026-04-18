@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../viewmodels/hr_viewmodel.dart';
+import '../../core/services/secure_storage_service.dart';
+import 'dart:convert';
 import '../../data/models/hr_request_model.dart';
 
 class HrScreen extends StatefulWidget {
@@ -70,8 +72,31 @@ class _HrScreenState extends State<HrScreen> {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: ElevatedButton(
-                    onPressed: () {
-                      context.push('/hr/new');
+                    onPressed: () async {
+                      final storage = SecureStorageService();
+                      final rawData = await storage.getUserData();
+                      bool canRequest = false;
+                      
+                      if (rawData != null) {
+                        try {
+                          final map = jsonDecode(rawData);
+                          final permsMap = map['permissions'] ?? {};
+                          canRequest = permsMap['hr_request'] == true;
+                        } catch (e) {
+                          debugPrint('Error parsing permissions: $e');
+                        }
+                      }
+
+                      if (canRequest) {
+                        if (context.mounted) context.push('/hr/new');
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text('You do not have permission to create HR requests.'),
+                            backgroundColor: Colors.orange,
+                          ));
+                        }
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryColor,
@@ -131,6 +156,9 @@ class _HrScreenState extends State<HrScreen> {
     );
   }
 
+  // Helper for inline scoping
+  SecureStorageService importSecureStorage() => SecureStorageService();
+
   Widget _buildHrCard(HrRequestModel request) {
     Color bgStatusColor = AppColors.pendingBgColor;
     Color textStatusColor = AppColors.pendingTextColor;
@@ -151,11 +179,39 @@ class _HrScreenState extends State<HrScreen> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
+        onTap: () async {
+          final storage = importSecureStorage(); // Hack to bypass import, see below
+          final rawData = await storage.getUserData();
+          bool canApprove = false;
+          bool canExecute = false;
+          
+          if (rawData != null) {
+            try {
+              final map = jsonDecode(rawData);
+              final permsMap = map['permissions'] ?? {};
+              canApprove = permsMap['hr_approve'] == true;
+              canExecute = permsMap['hr_execute'] == true;
+            } catch (e) {
+              debugPrint('Error parsing permissions: $e');
+            }
+          }
+
           if (request.status.toUpperCase() == 'PENDING') {
-            context.push('/hr/approve/${request.id}', extra: request);
+            if (canApprove) {
+              if (context.mounted) context.push('/hr/approve/${request.id}', extra: request);
+            } else {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('You do not have permission to approve this request.'), backgroundColor: Colors.orange));
+              }
+            }
           } else if (request.status.toUpperCase() == 'APPROVED') {
-            context.push('/hr/close/${request.id}', extra: request);
+            if (canExecute) {
+               if (context.mounted) context.push('/hr/close/${request.id}', extra: request);
+            } else {
+               if (context.mounted) {
+                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('You do not have permission to close this request.'), backgroundColor: Colors.orange));
+               }
+            }
           }
         },
         child: Padding(
@@ -194,12 +250,14 @@ class _HrScreenState extends State<HrScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Text(
-                  request.itemsText,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimaryColor,
+                Expanded(
+                  child: Text(
+                    request.itemsText,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimaryColor,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 4),

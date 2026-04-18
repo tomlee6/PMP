@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../viewmodels/nrm_viewmodel.dart';
+import '../../core/services/secure_storage_service.dart';
+import 'dart:convert';
 import '../../data/models/nrm_request_model.dart';
 
 class NrmScreen extends StatefulWidget {
@@ -38,7 +40,7 @@ class _NrmScreenState extends State<NrmScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<NrmViewModel>(context);
-    final filters = ['All', 'Pending', 'Approved', 'Closed'];
+    final filters = ['All', 'Pending', 'Issued', 'Cancelled'];
 
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
@@ -72,8 +74,26 @@ class _NrmScreenState extends State<NrmScreen> {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: ElevatedButton(
-                    onPressed: () {
-                      context.push('/nrm/new');
+                    onPressed: () async {
+                      final storage = SecureStorageService();
+                      final rawData = await storage.getUserData();
+                      bool canRequest = false;
+                      
+                      if (rawData != null) {
+                        try {
+                          final map = jsonDecode(rawData);
+                          final permsMap = map['permissions'] ?? {};
+                          canRequest = permsMap['nrm_request'] == true;
+                        } catch (e) {
+                          debugPrint('Error: $e');
+                        }
+                      }
+
+                      if (canRequest) {
+                        if (context.mounted) context.push('/nrm/new');
+                      } else {
+                        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('You do not have permission to create NRM requests.'), backgroundColor: Colors.orange));
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green.shade700,
@@ -196,8 +216,44 @@ class _NrmScreenState extends State<NrmScreen> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          context.push('/nrm/approve/${request.id}', extra: request);
+        onTap: () async {
+          final storage = SecureStorageService();
+          final rawData = await storage.getUserData();
+          bool canApprove = false;
+          bool canExecute = false;
+          
+          if (rawData != null) {
+            try {
+              final map = jsonDecode(rawData);
+              final permsMap = map['permissions'] ?? {};
+              canApprove = permsMap['nrm_approve'] == true;
+              canExecute = permsMap['nrm_execute'] == true;
+            } catch (e) {
+              debugPrint('Error parsing permissions: $e');
+            }
+          }
+
+          if (request.status.toUpperCase() == 'PENDING') {
+            if (canApprove) {
+              if (context.mounted) context.push('/nrm/approve/${request.id}', extra: request);
+            } else {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('You do not have permission to approve this request.'), backgroundColor: Colors.orange));
+              }
+            }
+          } else if (request.status.toUpperCase() == 'ISSUANCE') {
+            if (canExecute) {
+               if (context.mounted) context.push('/nrm/approve/${request.id}', extra: request);
+            } else {
+               if (context.mounted) {
+                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('You do not have permission to issue this request.'), backgroundColor: Colors.orange));
+               }
+            }
+          } else {
+            // For CLOSED or CANCELLED, allow view only mode or block
+            // For now, let's just push so they can see the details in read-only.
+            if (context.mounted) context.push('/nrm/approve/${request.id}', extra: request);
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),

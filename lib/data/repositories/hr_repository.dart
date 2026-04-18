@@ -47,9 +47,9 @@ class HrRepository {
   Future<HrSingleRequestResponse> createHrRequest({
     required String customerName,
     required String visitDate,
-    required int purposeId,
     required String remarks,
     required String itemsText,
+    required int purposeId,
   }) async {
     final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.hrRequestsEndpoint}');
     final token = await _storageService.getToken();
@@ -84,7 +84,7 @@ class HrRepository {
 
       final Map<String, dynamic> responseBody = jsonDecode(response.body);
       
-      if (response.statusCode == 200 && responseBody['success'] == true) {
+      if ((response.statusCode == 200 || response.statusCode == 201) && responseBody['success'] == true) {
         return HrSingleRequestResponse.fromJson(responseBody);
       } else {
         String errorDesc = responseBody['message'] ?? 'Failed to submit request.';
@@ -155,15 +155,20 @@ class HrRepository {
       print('Response Status Code: ${response.statusCode}');
       print('Response Body: ${response.body}');
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
-        return responseBody['success'] == true;
+        if (responseBody['success'] == true) {
+          return true;
+        } else {
+          throw Exception(responseBody['message'] ?? 'Action failed.');
+        }
+      } else {
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        throw Exception(responseBody['message'] ?? 'Server Error: ${response.statusCode}');
       }
-      return false;
     } catch (e) {
-      print('HTTP error, simulating success for testing: $e');
-      await Future.delayed(const Duration(seconds: 1)); // Simulate network delay
-      return true; // Simulate success
+      print('HTTP error: $e');
+      throw Exception(e.toString());
     }
   }
 

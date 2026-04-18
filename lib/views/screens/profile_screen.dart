@@ -143,16 +143,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         children: [
                           _buildProfileOption(
-                            icon: Icons.person,
-                            title: 'Edit Profile',
-                            onTap: () {
-                              // ScaffoldMessenger.of(context).showSnackBar(
-                              //   const SnackBar(content: Text('Edit Profile coming soon')),
-                              // );
-                            },
-                          ),
-                          const Divider(height: 1),
-                          _buildProfileOption(
                             icon: Icons.lock,
                             title: 'Change Password',
                             onTap: () {
